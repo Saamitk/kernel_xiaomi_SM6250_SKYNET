@@ -62,9 +62,13 @@ See [`docs/DEVICES.md`](docs/DEVICES.md).
 | Notable config | `CONFIG_LTO_CLANG=y`, `CONFIG_THINLTO=y`, `CONFIG_SHADOW_CALL_STACK=y`, `CONFIG_BPF_SYSCALL=y`, `CONFIG_CGROUP_BPF=y` |
 
 The pinned upstream defconfig shipped `-kinesis-omega-bpf`; SKYNET overrides it so the kernel
-version identifies this project instead of the upstream fork. `CONFIG_LOCALVERSION_AUTO` stays off,
-so no git-hash suffix is appended. To rename the line, change that single defconfig option and
-rebuild — an existing ZIP keeps the version string it was built with.
+version identifies this project instead of the upstream fork. Upstream also **hardcoded** that
+suffix in `scripts/setlocalversion` (ignoring `CONFIG_LOCALVERSION`) and in `init/version.c`
+(`uname -r`'s release field); SKYNET restores the stock Linux behaviour in both files, so the
+defconfig is now the single source of truth. `CONFIG_LOCALVERSION_AUTO` stays off, so no git-hash
+suffix is appended. To rename the line, change that single defconfig option and rebuild — an
+existing ZIP keeps the version string it was built with. CI fails the build if `kernel.release`
+does not contain `SKYNET`.
 
 The Clang LTO/ThinLTO and shadow-call-stack options mean a **Clang + LLD** toolchain is required;
 GCC-only builds will not work. See [`docs/BUILDING.md`](docs/BUILDING.md).

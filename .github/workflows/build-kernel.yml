@@ -96,7 +96,7 @@ jobs:
           echo "$REL"
           case "$REL" in
             *SKYNET*) ;;
-            *) echo "::warning::kernel.release does not contain SKYNET: $REL" ;;
+            *) echo "::error::kernel.release does not contain SKYNET: $REL"; exit 1 ;;
           esac
           grep -m1 '^CONFIG_LOCALVERSION=' out/.config || true
           echo "--- boot artefacts ---"
