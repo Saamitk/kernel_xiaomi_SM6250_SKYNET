@@ -1,0 +1,58 @@
+name: Import full kernel source
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_ref:
+        description: Reference commit to import
+        required: true
+        default: 4afc6f0769f0f3b2b10d50d3fa02f0ba7c89a183
+      target_dir:
+        description: Folder to create
+        required: true
+        default: kernel
+
+permissions:
+  contents: write
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 1
+
+      - name: Fetch pinned kernel tree
+        env:
+          SOURCE_REF: ${{ inputs.source_ref }}
+          TARGET_DIR: ${{ inputs.target_dir }}
+        run: |
+          git clone --depth 1 --no-checkout \
+            https://github.com/AzyrRuthless/kernel_xiaomi_sm6250.git /tmp/ref
+          cd /tmp/ref
+          git fetch --depth 1 origin "$SOURCE_REF"
+          git checkout -q --detach "$SOURCE_REF"
+          rm -rf .git
+          mkdir -p "$GITHUB_WORKSPACE/$TARGET_DIR"
+          cp -a . "$GITHUB_WORKSPACE/$TARGET_DIR/"
+
+      - name: Stop ignoring the imported folder
+        env:
+          TARGET_DIR: ${{ inputs.target_dir }}
+        run: |
+          grep -vxF "/${TARGET_DIR}/" .gitignore > .gitignore.tmp || true
+          mv .gitignore.tmp .gitignore
+
+      - name: Commit and push
+        env:
+          TARGET_DIR: ${{ inputs.target_dir }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A "$TARGET_DIR" .gitignore
+          git commit -s -m "kernel: import full 4.14.357-openela source tree [skip ci]" \
+            || { echo "nothing to import"; exit 0; }
+          git push origin "HEAD:${{ github.ref_name }}"
