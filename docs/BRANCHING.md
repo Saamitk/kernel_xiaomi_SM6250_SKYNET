@@ -33,8 +33,9 @@ Optionally make it the default branch:
 gh api -X PATCH repos/Saamitk/kernel_xiaomi_SM6250_SKYNET -f default_branch=17
 ```
 
-Keep `main` as the stable landing branch. Note that `build-kernel.yml` triggers on pushes to `17`
-and `skynet-17-*` tags, so creating the branch enables automatic build runs.
+Keep `main` as the stable landing branch. `build-kernel.yml` runs on `workflow_dispatch`, on
+`skynet-17-*` tags, and when its own workflow/build/packaging files change — so most commits do
+not trigger a 30-minute kernel build. Run it manually from the Actions tab for a release.
 
 ## Tags and release names
 

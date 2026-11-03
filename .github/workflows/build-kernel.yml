@@ -24,9 +24,18 @@ on:
         description: Optional tag for a GitHub Release (empty = artifact only)
         required: false
         default: ''
+  # One-shot registration trigger: editing this workflow (or the build /
+  # packaging scripts) starts a build on any branch. GitHub only registers a
+  # workflow for workflow_dispatch after it has run at least once. Tag pushes
+  # ignore path filters, so release tags still always trigger a build.
   push:
-    branches: ['17']
-    tags: ['skynet-17-*']
+    paths:
+      - '.github/workflows/build-kernel.yml'
+      - 'scripts/build.sh'
+      - 'scripts/package-anykernel.sh'
+      - 'anykernel3/**'
+    tags:
+      - 'skynet-17-*'
 
 permissions:
   contents: write
