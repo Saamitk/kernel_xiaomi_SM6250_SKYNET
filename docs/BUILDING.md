@@ -50,7 +50,12 @@ defconfig exists, and the pin quoted in `README.md` / `docs/UPSTREAM.md` matches
 ./scripts/build.sh --clean --jobs 8                # mrproper + 8-way build
 ./scripts/build.sh --menuconfig                   # edit .config, then stop
 ./scripts/build.sh --target Image.gz              # other make targets
+./scripts/build.sh --no-polly                    # Clang toolchains without Polly
 ```
+
+`--no-polly` disables `CONFIG_LLVM_POLLY` after generating `.config`. The pinned defconfig enables
+it, which injects `-mllvm -polly-*` flags that prebuilt toolchains such as proton-clang reject
+(`Unknown command line argument '-polly-loopfusion-greedy=1'`). CI sets this by default.
 
 Defaults: source at the repository root, output `out/`, defconfig
 `vendor/xiaomi/miatoll_defconfig`, target `Image.gz-dtb`. Overrides via environment:
@@ -121,7 +126,7 @@ symbol in the commit message.
 | `unrecognized command-line option` / LTO link failure | Clang and LLD versions do not match; use one prebuilt toolchain via `--clang-dir`. |
 | `ld: unknown option: --thinlto` | `LD=ld.lld` missing; ensure `ld.lld` is on `PATH`. |
 | Missing `arm-linux-gnueabi-` tools | Install 32-bit ARM cross binutils; the compat vDSO needs them. |
-| `CONFIG_LLVM_POLLY` errors | Polly unavailable in your Clang; disable it for local builds with `scripts/config`. |
+| `clang: Unknown command line argument '-polly-...'` | Polly unavailable in your Clang; use `./scripts/build.sh --no-polly` (CI does this by default). |
 | `scripts/config: not found` | Run the command from the repository root. |
 | Stale `.config` after changing defconfig | `./scripts/build.sh --clean`, then regenerate. |
 | `package-anykernel.sh`: "no kernel image found" | Build `Image.gz-dtb` first; check `out/arch/arm64/boot/`. |

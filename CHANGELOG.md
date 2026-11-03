@@ -27,6 +27,8 @@ All notable changes to the SKYNET kernel project are documented here. Format fol
 
 - `scripts/build.sh` auto-detects the source root (root or legacy `kernel/`) and defaults to
   `Image.gz-dtb`; `Validate` CI now lints only the SKYNET helper scripts.
+- CI disables `CONFIG_LLVM_POLLY` by default (`--no-polly`): the pinned defconfig's Polly flags
+  are rejected by prebuilt Clang toolchains without Polly.
 - `docs/LICENSE-NOTICE.md`: with the GPL-2.0 tree in-tree, `COPYING` is the primary license for
   kernel code and GPL-3.0 `LICENSE` covers SKYNET-authored files.
 

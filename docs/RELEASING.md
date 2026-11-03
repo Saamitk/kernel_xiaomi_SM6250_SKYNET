@@ -4,9 +4,12 @@ SKYNET ZIPs are produced by GitHub Actions, never committed to the repository.
 
 ## Producing a ZIP
 
-1. Push the branch (or run manually): **Actions → Build SKYNET kernel (AnyKernel3 ZIP) → Run workflow**.
+1. **Actions → Build SKYNET kernel (AnyKernel3 ZIP) → Run workflow** (pick the branch to build).
+   It also runs automatically on `skynet-17-*` tags and when the workflow/build/packaging files
+   change — that first automatic run is what registers it for manual dispatch.
 2. Inputs: Clang repo/ref (default `kdrag0n/proton-clang`), make target (default `Image.gz-dtb`),
-   and an optional `release_tag`.
+   `no_polly` (default `true`, required for Clang builds without Polly), and an optional
+   `release_tag`.
 3. The workflow installs dependencies, fetches the pinned Clang, verifies the in-tree source with
    [`scripts/verify-source.sh`](../scripts/verify-source.sh), builds with
    [`scripts/build.sh`](../scripts/build.sh), then calls
