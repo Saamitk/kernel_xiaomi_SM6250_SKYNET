@@ -1,0 +1,79 @@
+name: Publish SKYNET ZIP release
+
+# Promotes a successful build's `skynet-kernel-zip` artifact into a GitHub
+# Release without rebuilding the kernel. Useful when a build was dispatched
+# manually and the artifact should become a permanent, downloadable release.
+# Run from Actions -> "Run workflow" on the default branch.
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Actions run ID whose skynet-kernel-zip artifact to publish
+        required: true
+        type: string
+      tag:
+        description: Release tag to create (e.g. skynet-17-r1)
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: skynet-kernel-zip
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: dist
+
+      - name: Verify artifact integrity
+        run: |
+          set -euo pipefail
+          ls -lh dist
+          test "$(find dist -maxdepth 1 -name '*.zip' | wc -l)" -eq 1
+          test "$(find dist -maxdepth 1 -name '*.zip.sha256' | wc -l)" -eq 1
+          ( cd dist && sha256sum -c ./*.sha256 )
+          ( cd dist && unzip -t ./*.zip | tail -n 2 )
+          echo "--- checksum ---"
+          cat dist/*.zip.sha256
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag }}
+          target_commitish: ${{ github.sha }}
+          name: SKYNET 17 — ${{ inputs.tag }} (UNTESTED)
+          prerelease: true
+          body: |
+            ## UNTESTED — hardware validation required
+
+            This AnyKernel3 ZIP was produced automatically by
+            `Build SKYNET kernel (AnyKernel3 ZIP)` from build run
+            `${{ inputs.run_id }}`. **It has not been boot-tested on any
+            miatoll device.** Treat it as a development build.
+
+            Before flashing:
+
+            - Back up your stock `boot` (and `dtbo`, if your ROM uses one).
+            - Confirm your device codename, the `boot` block path and whether
+              your ROM is A-only or A/B in `anykernel3/anykernel.sh`.
+            - Keep a way to restore stock boot (fastboot / recovery).
+            - Verify the downloaded ZIP against the attached `.sha256`.
+
+            Source: Linux 4.14.357-openela, `vendor/xiaomi/miatoll_defconfig`,
+            pinned at `4afc6f0769f0f3b2b10d50d3fa02f0ba7c89a183`. Clean /
+            stock-like line: no KernelSU, SUSFS or other root solution.
+            `CONFIG_LLVM_POLLY` is disabled for prebuilt Clang compatibility.
+
+            See [docs/RELEASING.md](https://github.com/${{ github.repository }}/blob/main/docs/RELEASING.md)
+            for the full flashing checklist.
+          files: |
+            dist/*.zip
+            dist/*.zip.sha256

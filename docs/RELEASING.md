@@ -4,15 +4,32 @@ SKYNET ZIPs are produced by GitHub Actions, never committed to the repository.
 
 ## Producing a ZIP
 
-1. Push the branch (or run manually): **Actions → Build SKYNET kernel (AnyKernel3 ZIP) → Run workflow**.
+1. **Actions → Build SKYNET kernel (AnyKernel3 ZIP) → Run workflow** (pick the branch to build).
+   It also runs automatically on `skynet-17-*` tags and when the workflow/build/packaging files
+   change — that first automatic run is what registers it for manual dispatch.
 2. Inputs: Clang repo/ref (default `kdrag0n/proton-clang`), make target (default `Image.gz-dtb`),
-   and an optional `release_tag`.
+   `no_polly` (default `true`, required for Clang builds without Polly), and an optional
+   `release_tag`.
 3. The workflow installs dependencies, fetches the pinned Clang, verifies the in-tree source with
    [`scripts/verify-source.sh`](../scripts/verify-source.sh), builds with
    [`scripts/build.sh`](../scripts/build.sh), then calls
    [`scripts/package-anykernel.sh`](../scripts/package-anykernel.sh).
 4. Download the `skynet-kernel-zip` artifact: `skynet-17-<date>-<run>.zip` plus its `.sha256`.
    Supplying `release_tag` also publishes both files to a GitHub Release.
+
+### Promote an existing artifact (no rebuild)
+
+A manual build already produced a ZIP; publishing it as a Release should not cost another
+20-minute build. From the default branch:
+
+```bash
+gh workflow run publish-release.yml --ref main \
+  -f run_id=<successful-build-run-id> -f tag=skynet-17-r1
+```
+
+The workflow downloads `skynet-kernel-zip` from that run, verifies the ZIP against its `.sha256`
+and with `unzip -t`, then creates a **pre-release** with an explicit "UNTESTED" warning. Both
+files become permanent release assets. Releases are never committed to the repository.
 
 Typical runtime is 25–45 minutes. The first run is a **toolchain compatibility test** — the
 pinned defconfig enables `CONFIG_LTO_CLANG`, `CONFIG_THINLTO`, `CONFIG_SHADOW_CALL_STACK` and

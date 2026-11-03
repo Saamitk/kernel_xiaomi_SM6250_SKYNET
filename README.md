@@ -107,11 +107,13 @@ Full details are in [`docs/BUILDING.md`](docs/BUILDING.md).
 | Workflow | Trigger | What it does |
 | --- | --- | --- |
 | Flatten kernel source to repository root | push of that workflow / manual | One-shot: moves the tree out of `kernel/` into the root (already done, idempotent) |
-| Build SKYNET kernel (AnyKernel3 ZIP) | manual dispatch, branch `17`, `skynet-17-*` tags | Builds the kernel, packages an AnyKernel3 ZIP, uploads the artifact, optionally publishes a Release |
+| Build SKYNET kernel (AnyKernel3 ZIP) | manual dispatch, edits to its workflow/build/packaging files, `skynet-17-*` tags | Builds the kernel, packages an AnyKernel3 ZIP, uploads the artifact, optionally publishes a Release |
+| Publish SKYNET ZIP release | manual dispatch | Promotes an existing build artifact into a GitHub Release without rebuilding |
 | Validate | push / PR | Shell syntax, ShellCheck, source/pin verification, Markdown links |
 
 **To get a flashable ZIP:** Actions → *Build SKYNET kernel (AnyKernel3 ZIP)* → *Run workflow* →
-download the `skynet-kernel-zip` artifact. See [`docs/RELEASING.md`](docs/RELEASING.md).
+download the `skynet-kernel-zip` artifact. To make it a permanent Release, run
+*Publish SKYNET ZIP release* with that run's ID. See [`docs/RELEASING.md`](docs/RELEASING.md).
 
 ## The `17` branch
 

@@ -28,6 +28,7 @@ CLANG_TRIPLE="${CLANG_TRIPLE:-aarch64-linux-gnu-}"
 DRY_RUN=0
 CLEAN=0
 MENUCONFIG=0
+NO_POLLY=0
 
 usage() {
     cat <<'USAGE'
@@ -41,6 +42,7 @@ Usage: scripts/build.sh [options]
   --jobs N           Parallel jobs (default: nproc).
   --clean            Run mrproper before configuring.
   --menuconfig       Open menuconfig after configuring, then stop.
+  --no-polly         Disable CONFIG_LLVM_POLLY (for Clang builds without Polly).
   --dry-run          Print the make commands without running them.
   -h, --help         Show this help.
 
@@ -71,6 +73,7 @@ while (($#)); do
         --jobs) JOBS="${2:?--jobs needs a value}"; shift 2 ;;
         --clean) CLEAN=1; shift ;;
         --menuconfig) MENUCONFIG=1; shift ;;
+        --no-polly) NO_POLLY=1; shift ;;
         --dry-run) DRY_RUN=1; shift ;;
         -h|--help) usage; exit 0 ;;
         *) die "unknown option: $1 (try --help)" ;;
@@ -120,6 +123,15 @@ fi
 
 log "defconfig: $DEFCONFIG"
 run make "${MAKE_ARGS[@]}" "$DEFCONFIG"
+
+# CONFIG_LLVM_POLLY=y injects -mllvm -polly-* flags that prebuilt Clang
+# toolchains without Polly reject (e.g. proton-clang). Disable it for those
+# builds; the resulting kernel is otherwise identical.
+if ((NO_POLLY)); then
+    log "disabling CONFIG_LLVM_POLLY (toolchain without Polly)"
+    run "$KERNEL_DIR/scripts/config" --file "$OUT_DIR/.config" -d LLVM_POLLY
+fi
+
 run make "${MAKE_ARGS[@]}" olddefconfig
 
 if ((MENUCONFIG)); then

@@ -1,9 +1,9 @@
 name: Build SKYNET kernel (AnyKernel3 ZIP)
 
 # Produces a flashable AnyKernel3 ZIP from the in-tree kernel source.
-# Run it from the Actions tab ("Run workflow"), or let it run on branch 17 /
-# skynet-17-* tags once that branch exists. Nothing is built on push to other
-# branches, so a toolchain experiment never breaks normal CI.
+# Run it from the Actions tab ("Run workflow"). It also runs on skynet-17-*
+# tags, and when its own workflow/build/packaging files change (one-shot
+# registration trigger). Normal kernel/doc commits do not start a 30-min build.
 
 on:
   workflow_dispatch:
@@ -24,9 +24,24 @@ on:
         description: Optional tag for a GitHub Release (empty = artifact only)
         required: false
         default: ''
+      no_polly:
+        description: Disable CONFIG_LLVM_POLLY (needed for toolchains without Polly)
+        required: true
+        default: 'true'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+  # Tag pushes ignore path filters, so release tags always build. Editing the
+  # build pipeline on any branch also builds once (and registers the workflow).
   push:
-    branches: ['17']
-    tags: ['skynet-17-*']
+    paths:
+      - '.github/workflows/build-kernel.yml'
+      - 'scripts/build.sh'
+      - 'scripts/package-anykernel.sh'
+      - 'anykernel3/**'
+    tags:
+      - 'skynet-17-*'
 
 permissions:
   contents: write
@@ -70,9 +85,12 @@ jobs:
       - name: Configure and build
         env:
           TARGET: ${{ inputs.target || 'Image.gz-dtb' }}
+          NO_POLLY: ${{ inputs.no_polly || 'true' }}
         run: |
+          EXTRA=()
+          if [ "$NO_POLLY" = "true" ]; then EXTRA+=(--no-polly); fi
           ./scripts/build.sh --clang-dir "$HOME/clang/bin" \
-            --jobs "$(nproc)" --target "$TARGET"
+            --jobs "$(nproc)" --target "$TARGET" "${EXTRA[@]}"
           echo "--- boot artefacts ---"
           ls -lh out/arch/arm64/boot/ || true
 
@@ -98,6 +116,16 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ inputs.release_tag }}
+          prerelease: true
+          body: |
+            ## UNTESTED — hardware validation required
+
+            Automatically built by `Build SKYNET kernel (AnyKernel3 ZIP)`;
+            **not boot-tested on any miatoll device**. Back up your stock
+            `boot`/`dtbo`, verify the device codename, block path and slot
+            layout, and check the attached `.sha256` before flashing.
+
+            See [docs/RELEASING.md](https://github.com/${{ github.repository }}/blob/main/docs/RELEASING.md).
           files: |
             ${{ steps.package.outputs.zip }}
             ${{ steps.package.outputs.zip }}.sha256
