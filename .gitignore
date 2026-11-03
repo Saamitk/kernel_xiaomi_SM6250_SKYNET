@@ -1,6 +1,5 @@
 # Fetched upstream kernel source (created by scripts/sync-source.sh).
 # The Linux tree is ~1.3 GB / ~60k files and must never be committed here.
-/kernel/
 
 # Build output (out/ may live inside kernel/ or at the repository root).
 /out/
