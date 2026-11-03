@@ -73,6 +73,10 @@ jobs:
           git checkout -q --detach "$PIN"
           rm -rf .git
 
+          # IMPORTANT: return to the repository before running any further git
+          # commands (/tmp/ref is no longer a git repository at this point).
+          cd "$ROOT"
+
           cp -a /tmp/ref/. "$ROOT/"
 
           # Restore SKYNET files. The kernel tree has no .github/, docs/ or
