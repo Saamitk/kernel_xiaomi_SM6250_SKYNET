@@ -116,6 +116,16 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ inputs.release_tag }}
+          prerelease: true
+          body: |
+            ## UNTESTED — hardware validation required
+
+            Automatically built by `Build SKYNET kernel (AnyKernel3 ZIP)`;
+            **not boot-tested on any miatoll device**. Back up your stock
+            `boot`/`dtbo`, verify the device codename, block path and slot
+            layout, and check the attached `.sha256` before flashing.
+
+            See [docs/RELEASING.md](https://github.com/${{ github.repository }}/blob/main/docs/RELEASING.md).
           files: |
             ${{ steps.package.outputs.zip }}
             ${{ steps.package.outputs.zip }}.sha256

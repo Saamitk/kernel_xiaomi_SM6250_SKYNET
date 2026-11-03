@@ -15,6 +15,8 @@ All notable changes to the SKYNET kernel project are documented here. Format fol
   `.gitignore` rules are restored.
 - `.github/workflows/build-kernel.yml`: Clang/LLD build → AnyKernel3 ZIP artifact → optional
   GitHub Release, with `kernel.release`, `.config` and toolchain provenance.
+- `.github/workflows/publish-release.yml`: promote an existing build artifact into a
+  checksum-verified, clearly marked UNTESTED pre-release without rebuilding the kernel.
 - [`anykernel3/anykernel.sh`](anykernel3/anykernel.sh): device checks for `curtana`, `joyeuse`,
   `excalibur`, `gram` and `miatoll`; clean kernel, no ramdisk edits.
 - `scripts/package-anykernel.sh` and `scripts/verify-source.sh`; `scripts/sync-source.sh` removed
@@ -35,8 +37,15 @@ All notable changes to the SKYNET kernel project are documented here. Format fol
 ### Notes
 
 - The `17` line stays **clean / stock-like**: no KernelSU, SUSFS or other root/hiding patches.
-- No flashable ZIP is committed; none has been validated on hardware yet. Add a
-  `skynet-17-r1` entry with build provenance when the first ZIP ships.
+- No flashable ZIP is committed to the repository; none has been validated on hardware yet.
+
+### First CI build — `skynet-17-r1` (UNTESTED)
+
+- Actions run `41580476064`, source commit `4fbcf9e82`, proton-clang `master`, `--no-polly`.
+- `skynet-17-20261103-2.zip` — SHA-256
+  `31ae7b45cf993dfe4c7557c6368f02341d62fd6a0310926394fc414aabc9b778`.
+- Contains `Image.gz-dtb` and `Image.gz` in an AnyKernel3 framework. **No boot test yet**;
+  back up stock `boot`/`dtbo` and verify device, block and slot settings before flashing.
 
 ## [0.1.0] — scaffold
 
