@@ -129,6 +129,7 @@ symbol in the commit message.
 | `clang: Unknown command line argument '-polly-...'` | Polly unavailable in your Clang; use `./scripts/build.sh --no-polly` (CI does this by default). |
 | `scripts/config: not found` | Run the command from the repository root. |
 | Stale `.config` after changing defconfig | `./scripts/build.sh --clean`, then regenerate. |
+| `uname -r` ignores the new `CONFIG_LOCALVERSION` | Some vendor trees hardcode the suffix in `scripts/setlocalversion` and `init/version.c`; check both before trusting the defconfig. |
 | `package-anykernel.sh`: "no kernel image found" | Build `Image.gz-dtb` first; check `out/arch/arm64/boot/`. |
 | Build succeeds but device bootloops | Vendor/firmware mismatch or wrong AnyKernel3 block; see [`docs/DEVICES.md`](DEVICES.md). |
 

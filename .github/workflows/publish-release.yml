@@ -66,7 +66,9 @@ jobs:
               your ROM is A-only or A/B in `anykernel3/anykernel.sh`.
             - Keep a way to restore stock boot (fastboot / recovery).
             - Verify the downloaded ZIP against the attached `.sha256`.
+            - After booting, confirm `uname -r` reads `4.14.357-openela-SKYNET`.
 
+            Kernel version: `4.14.357-openela-SKYNET` (`CONFIG_LOCALVERSION=-SKYNET`).
             Source: Linux 4.14.357-openela, `vendor/xiaomi/miatoll_defconfig`,
             pinned at `4afc6f0769f0f3b2b10d50d3fa02f0ba7c89a183`. Clean /
             stock-like line: no KernelSU, SUSFS or other root solution.

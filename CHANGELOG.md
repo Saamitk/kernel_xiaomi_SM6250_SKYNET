@@ -27,6 +27,14 @@ All notable changes to the SKYNET kernel project are documented here. Format fol
 
 ### Changed
 
+- `CONFIG_LOCALVERSION` is now `-SKYNET` instead of the upstream pin's
+  `-kinesis-omega-bpf`: `uname -r` reads `4.14.357-openela-SKYNET`. The defconfig is otherwise
+  unchanged, and `CONFIG_LOCALVERSION_AUTO` stays disabled.
+- Removed the two hardcoded `-kinesis-omega-bpf` strings upstream had in
+  `scripts/setlocalversion` (which overrode `CONFIG_LOCALVERSION` entirely) and
+  `init/version.c` (`init_uts_ns.name.release`, i.e. `uname -r`). Both now use the stock
+  `CONFIG_LOCALVERSION` / `UTS_RELEASE` path. `build-kernel.yml` fails the build when
+  `kernel.release` lacks `SKYNET`.
 - `scripts/build.sh` auto-detects the source root (root or legacy `kernel/`) and defaults to
   `Image.gz-dtb`; `Validate` CI now lints only the SKYNET helper scripts.
 - CI disables `CONFIG_LLVM_POLLY` by default (`--no-polly`): the pinned defconfig's Polly flags
@@ -39,13 +47,26 @@ All notable changes to the SKYNET kernel project are documented here. Format fol
 - The `17` line stays **clean / stock-like**: no KernelSU, SUSFS or other root/hiding patches.
 - No flashable ZIP is committed to the repository; none has been validated on hardware yet.
 
-### First CI build — `skynet-17-r1` (UNTESTED)
+### First CI build — `skynet-17-r1` (UNTESTED, **SUPERSEDED**)
 
 - Actions run `41580476064`, source commit `4fbcf9e82`, proton-clang `master`, `--no-polly`.
 - `skynet-17-20261103-2.zip` — SHA-256
   `31ae7b45cf993dfe4c7557c6368f02341d62fd6a0310926394fc414aabc9b778`.
+- Contains `Image.gz-dtb` and `Image.gz` in an AnyKernel3 framework. **No boot test yet**.
+- **Superseded by `skynet-17-r2`**: this ZIP still reports
+  `4.14.357-openela-kinesis-omega-bpf` in `uname -r`. Do not flash it expecting SKYNET branding.
+
+### Current build — `skynet-17-r2` (UNTESTED)
+
+- Actions run `41601405560`, source commit `c5024cafb`, proton-clang `master`, `--no-polly`.
+- CI verified `kernel.release = 4.14.357-openela-SKYNET` and
+  `CONFIG_LOCALVERSION="-SKYNET"`; the build fails if that branding is missing.
+- `skynet-17-20261103-4.zip` — SHA-256
+  `ecfe2c0193ff426c866df1aae0f2d0e0f9e483ec3918eba71621b36ccd5db592`.
 - Contains `Image.gz-dtb` and `Image.gz` in an AnyKernel3 framework. **No boot test yet**;
   back up stock `boot`/`dtbo` and verify device, block and slot settings before flashing.
+- An intermediate build (`41598972597`, `skynet-17-20261103-3.zip`) was discarded without
+  release: it still carried the Kinesis name and exposed the upstream hardcodes.
 
 ## [0.1.0] — scaffold
 

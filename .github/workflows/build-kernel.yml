@@ -91,6 +91,14 @@ jobs:
           if [ "$NO_POLLY" = "true" ]; then EXTRA+=(--no-polly); fi
           ./scripts/build.sh --clang-dir "$HOME/clang/bin" \
             --jobs "$(nproc)" --target "$TARGET" "${EXTRA[@]}"
+          echo "--- kernel.release ---"
+          REL="$(cat out/include/config/kernel.release 2>/dev/null || printf 'unknown')"
+          echo "$REL"
+          case "$REL" in
+            *SKYNET*) ;;
+            *) echo "::error::kernel.release does not contain SKYNET: $REL"; exit 1 ;;
+          esac
+          grep -m1 '^CONFIG_LOCALVERSION=' out/.config || true
           echo "--- boot artefacts ---"
           ls -lh out/arch/arm64/boot/ || true
 

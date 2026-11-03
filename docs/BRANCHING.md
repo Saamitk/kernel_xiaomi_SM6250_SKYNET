@@ -42,7 +42,7 @@ not trigger a 30-minute kernel build. Run it manually from the Actions tab for a
 Use `skynet-17-r<N>`, for example `skynet-17-r1`. Attach to each release:
 
 - the flashable AnyKernel3 ZIP and its SHA-256;
-- `kernel.release`, e.g. `4.14.357-openela-kinesis-omega-bpf`;
+- `kernel.release`, e.g. `4.14.357-openela-SKYNET`;
 - the defconfig used (`vendor/xiaomi/miatoll_defconfig`) and `out/.config`;
 - the exact source commit and any local patches;
 - Clang and LLD versions plus `skynet-build.prop` from the ZIP;

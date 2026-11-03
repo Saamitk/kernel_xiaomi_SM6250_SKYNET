@@ -64,7 +64,8 @@ Clang/LLD version strings to the release notes as well.
 2. **Back up stock `boot` and `dtbo`** and keep the images off the phone.
 3. Verify the ZIP is for `miatoll` and that `anykernel.sh`'s `BLOCK`/slot settings match your ROM.
 4. Flash in recovery, wipe cache/dalvik if your recovery requires it, reboot.
-5. Check `uname -r` contains `4.14.357-openela` and the `-kinesis-omega-bpf` localversion.
+5. Check `uname -r` reads `4.14.357-openela-SKYNET`. If it ends in `-kinesis-omega-bpf`, the
+   ZIP was built before the SKYNET localversion change — do not publish it as a new release.
 
 If Wi-Fi, camera, fingerprint or charging break, suspect a vendor/firmware mismatch before
 changing the config — see [`docs/DEVICES.md`](DEVICES.md). Keep a `fastboot` path back to the

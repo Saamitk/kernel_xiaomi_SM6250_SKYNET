@@ -145,7 +145,10 @@ if test ! "$srctree" -ef .; then
 fi
 
 # CONFIG_LOCALVERSION and LOCALVERSION (if set)
-res="${res}-kinesis-omega-bpf${LOCALVERSION}"
+# SKYNET: upstream hardcoded -kinesis-omega-bpf here, which ignored the
+# defconfig entirely. Restore the stock behaviour so CONFIG_LOCALVERSION is
+# the single source of truth for the kernel version string.
+res="${res}${CONFIG_LOCALVERSION}${LOCALVERSION}"
 
 # scm version string if not at a tagged commit
 if test "$CONFIG_LOCALVERSION_AUTO" = "y"; then
