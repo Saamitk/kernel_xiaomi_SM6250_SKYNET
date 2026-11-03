@@ -27,6 +27,9 @@ All notable changes to the SKYNET kernel project are documented here. Format fol
 
 ### Changed
 
+- `CONFIG_LOCALVERSION` is now `-SKYNET` instead of the upstream pin's
+  `-kinesis-omega-bpf`: `uname -r` reads `4.14.357-openela-SKYNET`. The defconfig is otherwise
+  unchanged, and `CONFIG_LOCALVERSION_AUTO` stays disabled.
 - `scripts/build.sh` auto-detects the source root (root or legacy `kernel/`) and defaults to
   `Image.gz-dtb`; `Validate` CI now lints only the SKYNET helper scripts.
 - CI disables `CONFIG_LLVM_POLLY` by default (`--no-polly`): the pinned defconfig's Polly flags

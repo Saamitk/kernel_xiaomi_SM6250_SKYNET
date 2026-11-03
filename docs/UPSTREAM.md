@@ -20,11 +20,12 @@ source repository (`Makefile`, `Kconfig`, `arch/`, `drivers/`, `fs/`, `techpack/
 | Commit | `4afc6f0769f0f3b2b10d50d3fa02f0ba7c89a183` |
 | Commit subject | `miatoll_defconfig: reflect changes` |
 | Kernel | `4.14.357-openela` (`VERSION=4`, `PATCHLEVEL=14`, `SUBLEVEL=357`, `EXTRAVERSION=-openela`) |
-| `CONFIG_LOCALVERSION` | `-kinesis-omega-bpf` |
+| `CONFIG_LOCALVERSION` | `-kinesis-omega-bpf` (upstream; SKYNET overrides it to `-SKYNET`) |
 | Defconfig | `arch/arm64/configs/vendor/xiaomi/miatoll_defconfig` |
 | License | `SPDX-License-Identifier: GPL-2.0` (kernel source, see `COPYING`) |
 
-The pinned reference tree has **72,779 files**. The first import committed 72,722 because nested
+The pinned reference tree has **72,779 files**. SKYNET's own defconfig changes only the
+`CONFIG_LOCALVERSION` branding; all other options below are inherited unchanged from the pin. The first import committed 72,722 because nested
 `.gitignore` files filtered 57 dotfiles (`.elts/*`, `.gitattributes`,
 `.get_maintainer.ignore`, `.cocciconfig`, `fs/exfat/.github/workflows/c-cpp.yml`, some ACPI tool
 sources and firmware `.i` files). The flatten workflow re-fetched the pin and force-added those

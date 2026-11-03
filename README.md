@@ -58,8 +58,13 @@ See [`docs/DEVICES.md`](docs/DEVICES.md).
 | Pinned commit | `4afc6f0769f0f3b2b10d50d3fa02f0ba7c89a183` — *"miatoll_defconfig: reflect changes"* |
 | Kernel version | `4.14.357-openela` (OpenELA LTS), `SPDX-License-Identifier: GPL-2.0` |
 | Defconfig | `arch/arm64/configs/vendor/xiaomi/miatoll_defconfig` |
-| `CONFIG_LOCALVERSION` | `-kinesis-omega-bpf` |
+| `CONFIG_LOCALVERSION` | `-SKYNET` → `uname -r` reads `4.14.357-openela-SKYNET` |
 | Notable config | `CONFIG_LTO_CLANG=y`, `CONFIG_THINLTO=y`, `CONFIG_SHADOW_CALL_STACK=y`, `CONFIG_BPF_SYSCALL=y`, `CONFIG_CGROUP_BPF=y` |
+
+The pinned upstream defconfig shipped `-kinesis-omega-bpf`; SKYNET overrides it so the kernel
+version identifies this project instead of the upstream fork. `CONFIG_LOCALVERSION_AUTO` stays off,
+so no git-hash suffix is appended. To rename the line, change that single defconfig option and
+rebuild — an existing ZIP keeps the version string it was built with.
 
 The Clang LTO/ThinLTO and shadow-call-stack options mean a **Clang + LLD** toolchain is required;
 GCC-only builds will not work. See [`docs/BUILDING.md`](docs/BUILDING.md).
