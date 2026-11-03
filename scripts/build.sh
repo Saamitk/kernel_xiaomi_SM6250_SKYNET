@@ -2,15 +2,24 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
 # build.sh -- reproducible defconfig + Clang/LLD build wrapper for the Miatoll kernel.
-# Run scripts/sync-source.sh first.
+# The kernel source lives at the repository root (or in kernel/ before the
+# flatten workflow has run); both layouts are detected automatically.
 
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-KERNEL_DIR="${KERNEL_DIR:-${REPO_ROOT}/kernel}"
+
+if [[ -f "$REPO_ROOT/Makefile" && \
+      -f "$REPO_ROOT/arch/arm64/configs/vendor/xiaomi/miatoll_defconfig" ]]; then
+    DEFAULT_KERNEL_DIR="$REPO_ROOT"
+else
+    DEFAULT_KERNEL_DIR="$REPO_ROOT/kernel"
+fi
+
+KERNEL_DIR="${KERNEL_DIR:-$DEFAULT_KERNEL_DIR}"
 OUT_DIR="${OUT_DIR:-${KERNEL_DIR}/out}"
 DEFCONFIG="${DEFCONFIG:-vendor/xiaomi/miatoll_defconfig}"
-TARGET="${TARGET:-Image.gz}"
+TARGET="${TARGET:-Image.gz-dtb}"
 JOBS="${JOBS:-$(nproc)}"
 CLANG_DIR="${CLANG_DIR:-}"
 CROSS_COMPILE="${CROSS_COMPILE:-aarch64-linux-gnu-}"
@@ -24,11 +33,11 @@ usage() {
     cat <<'USAGE'
 Usage: scripts/build.sh [options]
 
-  --kernel-dir DIR   Kernel source (default: <repo>/kernel).
+  --kernel-dir DIR   Kernel source (auto-detected: repo root or kernel/).
   --out DIR          Build output directory (default: <kernel>/out).
   --clang-dir DIR    Prepend DIR to PATH (Clang/LLD/LLVM tools).
   --defconfig NAME   Defconfig target (default: vendor/xiaomi/miatoll_defconfig).
-  --target NAME      Make target (default: Image.gz).
+  --target NAME      Make target (default: Image.gz-dtb).
   --jobs N           Parallel jobs (default: nproc).
   --clean            Run mrproper before configuring.
   --menuconfig       Open menuconfig after configuring, then stop.
@@ -69,7 +78,9 @@ while (($#)); do
 done
 
 [[ "$JOBS" =~ ^[1-9][0-9]*$ ]] || die "--jobs must be a positive integer"
-[[ -f "$KERNEL_DIR/Makefile" ]] || die "no kernel source at $KERNEL_DIR -- run scripts/sync-source.sh first"
+[[ -f "$KERNEL_DIR/Makefile" ]] \
+    || die "no kernel source at $KERNEL_DIR -- run .github/workflows/flatten-source.yml"
+log "source: $KERNEL_DIR"
 
 if [[ -n "$CLANG_DIR" ]]; then
     [[ -d "$CLANG_DIR" ]] || die "clang dir not found: $CLANG_DIR"
@@ -78,7 +89,8 @@ fi
 
 if ((!DRY_RUN)); then
     for tool in clang ld.lld llvm-ar llvm-nm llvm-objcopy; do
-        command -v "$tool" >/dev/null 2>&1 || die "missing tool: $tool (install Clang/LLVM or pass --clang-dir)"
+        command -v "$tool" >/dev/null 2>&1 \
+            || die "missing tool: $tool (install Clang/LLVM or pass --clang-dir)"
     done
     log "$(clang --version | head -n1)"
     log "$(ld.lld --version | head -n1)"

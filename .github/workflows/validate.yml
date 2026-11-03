@@ -11,14 +11,18 @@ permissions:
 jobs:
   validate:
     name: Docs and scripts
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
 
+      # Only the SKYNET helper scripts are checked. After the source is
+      # flattened, scripts/ also contains the kernel's own build scripts,
+      # which are not ours to lint.
       - name: Shell syntax and executable bits
         run: |
           set -euo pipefail
-          for f in scripts/*.sh; do
+          for f in scripts/build.sh scripts/verify-source.sh \
+                   scripts/package-anykernel.sh; do
             bash -n "$f"
             test -x "$f" || { echo "not executable: $f"; exit 1; }
           done
@@ -27,10 +31,11 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq shellcheck
-          shellcheck -S error scripts/*.sh
+          shellcheck -S error scripts/build.sh scripts/verify-source.sh \
+            scripts/package-anykernel.sh
 
-      - name: Upstream pin consistency
-        run: ./scripts/sync-source.sh --check
+      - name: In-tree source and documentation pin
+        run: ./scripts/verify-source.sh
 
       - name: Markdown links
         run: python3 scripts/check-links.py

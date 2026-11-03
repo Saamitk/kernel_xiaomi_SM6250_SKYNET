@@ -1,0 +1,100 @@
+name: Flatten kernel source to repository root
+
+# One-shot migration: moves the complete 4.14.357-openela tree out of the
+# kernel/ subfolder and into the repository root, so this looks like a normal
+# kernel source repository (arch/, drivers/, fs/, Makefile, ... at the top).
+#
+# Runs automatically when this file is pushed, and can be re-run manually.
+# It is idempotent: once Makefile + the Miatoll defconfig exist at the root,
+# it exits without doing anything.
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/flatten-source.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: flatten-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  flatten:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 1
+
+      - name: Move the complete source tree into the root
+        env:
+          PIN: 4afc6f0769f0f3b2b10d50d3fa02f0ba7c89a183
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          ROOT="$GITHUB_WORKSPACE"
+          cd "$ROOT"
+
+          if [ -f "$ROOT/Makefile" ] && \
+             [ -f "$ROOT/arch/arm64/configs/vendor/xiaomi/miatoll_defconfig" ]; then
+            echo "Kernel source is already at the repository root; nothing to do."
+            exit 0
+          fi
+
+          # Preserve the SKYNET-owned files before the tree is copied over the root.
+          BACKUP=/tmp/skynet-backup
+          rm -rf "$BACKUP"
+          mkdir -p "$BACKUP/.github" "$BACKUP/docs" \
+                   "$BACKUP/skynet-scripts" "$BACKUP/anykernel3"
+          cp -a "$ROOT/.github/." "$BACKUP/.github/"
+          cp -a "$ROOT/docs/." "$BACKUP/docs/"
+          cp -a "$ROOT/scripts/." "$BACKUP/skynet-scripts/"
+          cp -a "$ROOT/anykernel3/." "$BACKUP/anykernel3/"
+          for f in README.md CHANGELOG.md CONTRIBUTING.md LICENSE .gitignore; do
+            cp -a "$ROOT/$f" "$BACKUP/"
+          done
+
+          # Drop the nested import. We re-fetch the pin instead of moving the
+          # directory: the original import lost 57 dotfiles (.elts/,
+          # .gitattributes, .get_maintainer.ignore, ...) to nested .gitignore
+          # rules, and it also avoids the "kernel/kernel" nesting trap.
+          rm -rf "$ROOT/kernel"
+
+          rm -rf /tmp/ref
+          git clone --depth 1 --no-checkout \
+            https://github.com/AzyrRuthless/kernel_xiaomi_sm6250.git /tmp/ref
+          cd /tmp/ref
+          git fetch --depth 1 origin "$PIN"
+          git checkout -q --detach "$PIN"
+          rm -rf .git
+
+          # IMPORTANT: return to the repository before running any further git
+          # commands (/tmp/ref is no longer a git repository at this point).
+          cd "$ROOT"
+
+          cp -a /tmp/ref/. "$ROOT/"
+
+          # Restore SKYNET files. The kernel tree has no .github/, docs/ or
+          # anykernel3/, and its scripts/ filenames do not clash with ours.
+          mkdir -p "$ROOT/.github" "$ROOT/docs" "$ROOT/scripts" "$ROOT/anykernel3"
+          cp -a "$BACKUP/.github/." "$ROOT/.github/"
+          cp -a "$BACKUP/docs/." "$ROOT/docs/"
+          cp -a "$BACKUP/skynet-scripts/." "$ROOT/scripts/"
+          cp -a "$BACKUP/anykernel3/." "$ROOT/anykernel3/"
+          for f in README.md CHANGELOG.md CONTRIBUTING.md LICENSE .gitignore; do
+            cp -a "$BACKUP/$f" "$ROOT/"
+          done
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # -f restores dotfiles that the kernel's own ".*" rule would ignore.
+          git add -f -A
+          git commit -s -m "kernel: flatten 4.14.357-openela source to repository root [skip ci]" \
+            || { echo "No changes to commit."; exit 0; }
+          git push origin "HEAD:$BRANCH"
+          echo "Done. Tracked files: $(git ls-files | wc -l)"

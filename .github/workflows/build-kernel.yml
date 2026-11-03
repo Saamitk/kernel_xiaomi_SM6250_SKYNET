@@ -1,0 +1,103 @@
+name: Build SKYNET kernel (AnyKernel3 ZIP)
+
+# Produces a flashable AnyKernel3 ZIP from the in-tree kernel source.
+# Run it from the Actions tab ("Run workflow"), or let it run on branch 17 /
+# skynet-17-* tags once that branch exists. Nothing is built on push to other
+# branches, so a toolchain experiment never breaks normal CI.
+
+on:
+  workflow_dispatch:
+    inputs:
+      clang_repo:
+        description: Prebuilt Clang/LLD repository
+        required: true
+        default: https://github.com/kdrag0n/proton-clang.git
+      clang_ref:
+        description: Branch or tag of the Clang repository
+        required: true
+        default: master
+      target:
+        description: Kernel make target
+        required: true
+        default: Image.gz-dtb
+      release_tag:
+        description: Optional tag for a GitHub Release (empty = artifact only)
+        required: false
+        default: ''
+  push:
+    branches: ['17']
+    tags: ['skynet-17-*']
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Free runner disk
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
+                      /usr/local/share/boost /usr/local/lib/node_modules || true
+          df -h
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq \
+            bc bison flex libssl-dev libelf-dev cpio zip ccache python3 \
+            gcc g++ make \
+            gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu \
+            gcc-arm-linux-gnueabi binutils-arm-linux-gnueabi
+
+      - name: Fetch pinned Clang toolchain
+        env:
+          CLANG_REPO: ${{ inputs.clang_repo || 'https://github.com/kdrag0n/proton-clang.git' }}
+          CLANG_REF: ${{ inputs.clang_ref || 'master' }}
+        run: |
+          git clone --depth 1 -b "$CLANG_REF" "$CLANG_REPO" "$HOME/clang"
+          "$HOME/clang/bin/clang" --version | head -n1
+          ls "$HOME/clang/bin/ld.lld"
+
+      - name: Verify in-tree source
+        run: ./scripts/verify-source.sh
+
+      - name: Configure and build
+        env:
+          TARGET: ${{ inputs.target || 'Image.gz-dtb' }}
+        run: |
+          ./scripts/build.sh --clang-dir "$HOME/clang/bin" \
+            --jobs "$(nproc)" --target "$TARGET"
+          echo "--- boot artefacts ---"
+          ls -lh out/arch/arm64/boot/ || true
+
+      - name: Package AnyKernel3 ZIP
+        id: package
+        run: |
+          NAME="skynet-17-$(date -u +%Y%m%d)-${GITHUB_RUN_NUMBER}"
+          ./scripts/package-anykernel.sh --name "$NAME" \
+            --out "$GITHUB_WORKSPACE/$NAME.zip"
+          sha256sum "$NAME.zip" | tee "$NAME.zip.sha256"
+          echo "zip=$NAME.zip" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: skynet-kernel-zip
+          path: |
+            ${{ steps.package.outputs.zip }}
+            ${{ steps.package.outputs.zip }}.sha256
+          if-no-files-found: error
+
+      - name: Publish GitHub Release
+        if: ${{ inputs.release_tag != '' }}
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.release_tag }}
+          files: |
+            ${{ steps.package.outputs.zip }}
+            ${{ steps.package.outputs.zip }}.sha256

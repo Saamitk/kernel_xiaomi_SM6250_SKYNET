@@ -1,46 +1,50 @@
 # Licensing notice
 
-This repository contains **two different bodies of code** with different licenses. Please read
-this before changing [`../LICENSE`](../LICENSE) or vendoring kernel files.
+The complete Linux kernel tree is now **in this repository**, so two licenses apply side by side.
+Read this before changing [`../LICENSE`](../LICENSE) or reusing code.
 
-## 1. Files committed here
+## 1. Kernel source — GPL-2.0
 
-The documentation, CI configuration and helper scripts committed to this repository
-(`README.md`, `docs/`, `scripts/`, `.github/`) are licensed **GPL-3.0** — the license chosen when
-the repository was created and recorded in [`../LICENSE`](../LICENSE). New contributions to those
-files are expected under the same terms and are signed off per
+The kernel tree at the root (`Makefile`, `arch/`, `drivers/`, `fs/`, `scripts/` from upstream, …)
+carries `SPDX-License-Identifier: GPL-2.0` and ships its own `COPYING`, `CREDITS` and per-file
+exceptions. That is the license for the vast majority of this repository.
+
+- Keep `COPYING` and all SPDX headers intact.
+- Do not relicense kernel code or copy it into a GPL-3.0-only project without the copyright
+  holders' permission.
+- A distributed kernel (including a flashable ZIP) must come with the corresponding source or a
+  written offer, under GPL-2.0 terms.
+
+## 2. SKYNET-authored files — GPL-3.0
+
+The documentation, CI configuration, AnyKernel3 config and helper scripts written for this
+project are licensed **GPL-3.0**, as recorded in [`../LICENSE`](../LICENSE):
+
+- root `README.md`, `CHANGELOG.md`, `CONTRIBUTING.md`;
+- `docs/`, `.github/`, `anykernel3/anykernel.sh`;
+- `scripts/build.sh`, `scripts/verify-source.sh`, `scripts/package-anykernel.sh`,
+  `scripts/check-links.py`.
+
+New contributions to those files are expected under the same terms and are signed off per
 [`../CONTRIBUTING.md`](../CONTRIBUTING.md).
 
-## 2. The fetched Linux kernel source
+> Because `scripts/` also holds upstream kernel build scripts, check a file's SPDX header before
+> assuming which license applies. Upstream files keep GPL-2.0; SKYNET files carry
+> `SPDX-License-Identifier: GPL-3.0-or-later`.
 
-`scripts/sync-source.sh` downloads a complete Linux kernel tree into an ignored `kernel/`
-directory. That tree carries `SPDX-License-Identifier: GPL-2.0` (plus per-file exceptions and its
-own `COPYING`/`LICENSES` files). It is **not** GPL-3.0 code, and fetching it does not relicense it.
-Keep its license files intact and treat it as GPL-2.0-only for redistribution.
+## 3. What this means for the repository license
 
-Consequences:
-
-- Do not copy kernel C files into this repository without also copying the applicable GPL-2.0
-  notices and documenting the change.
-- Do not remove or replace the kernel tree's `COPYING` / SPDX headers.
-- A flashable kernel you distribute must include the corresponding source (or a written offer),
-  under the GPL-2.0 terms of the kernel code.
-
-## 3. If you later vendor the source
-
-If the `17` line eventually becomes a full kernel-source repository (rather than this
-documentation/tooling home), the standard choice for a 4.14 Android kernel tree is **GPL-2.0**,
-matching the Linux source. Changing a repository license is a maintainer decision that affects
-every existing contribution, so discuss it in an issue first. Until then:
-
-- keep `LICENSE` (GPL-3.0) for this repository's own scripts and docs;
-- link to this notice from the README (already done in
-  [`../README.md`](../README.md));
-- state the kernel's GPL-2.0 status in every release's provenance file.
+- `COPYING` (GPL-2.0) is the **primary** license for the repository as a whole now that the tree
+  is in-tree; GitHub's license detector may report "Other" because two license files are present.
+- If you want a single declared license, **GPL-2.0** is the correct choice for a 4.14 Android
+  kernel tree. Changing a repository license is a maintainer decision that affects every existing
+  contribution, so discuss it in an issue first.
+- Until then, keep both files and link to this notice from `README.md` (already done).
 
 ## 4. Third-party components
 
-Toolchains (Clang/LLD, GNU cross binutils), AnyKernel3, KernelSU and similar projects each have
-their own licenses. They are **not** bundled here and are only referenced from the documentation.
+Clang/LLD and GNU cross binutils, [AnyKernel3](https://github.com/osm0sis/AnyKernel3), and any
+KernelSU-like project each have their own licenses. AnyKernel3 is fetched at packaging time and
+is **not** bundled in this repository. Toolchains are downloaded by CI, never committed.
 
 This notice is informational, not legal advice.

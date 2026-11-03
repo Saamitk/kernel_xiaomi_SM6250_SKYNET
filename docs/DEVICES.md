@@ -2,7 +2,7 @@
 
 `miatoll` is the **unified** board name for four Xiaomi/POCO phones built on the Qualcomm SM6250
 ("atoll", Snapdragon 720G class) platform. One kernel image, built from
-`vendor/xiaomi/miatoll_defconfig`, targets all of them.
+`arch/arm64/configs/vendor/xiaomi/miatoll_defconfig`, targets all of them.
 
 | Retail device | Codename | Variant notes |
 | --- | --- | --- |
@@ -11,6 +11,9 @@
 | Redmi Note 9 Pro Max (India) | `excalibur` | Indian Pro Max |
 | POCO M2 Pro | `gram` | Indian POCO M2 Pro |
 | Unified ROM builds | `miatoll` | What custom ROMs usually report |
+
+These five names are also the `device.name1..5` checks in
+[`anykernel3/anykernel.sh`](../anykernel3/anykernel.sh).
 
 ## Identifying a device
 
@@ -27,8 +30,8 @@ them in bug reports.
 
 ## Device tree and firmware
 
-- Board DTS/DTSI files live under the kernel's `arch/arm64/boot/dts/` tree (Qualcomm
-  `atoll`/`sdmmagpie` family).
+- Board DTS/DTSI files live under `arch/arm64/boot/dts/` (Qualcomm `atoll` / `sdmmagpie`
+  family).
 - The bootloader selects a DTB by hardware ID; appended-DTB and DTBO handling depends on the ROM
   and Android version. Do not mix a kernel with vendor blobs or firmware from a different ROM
   generation.
@@ -41,7 +44,8 @@ them in bug reports.
 1. Unlock the bootloader and install a working custom recovery.
 2. Back up the stock `boot` and `dtbo` partitions and keep them off the phone.
 3. Verify the ZIP is built for `miatoll` (not `curtana`-only or another board).
-4. Test on one device first; keep a way to restore the stock images with `fastboot`.
+4. Confirm the AnyKernel3 `BLOCK` and slot settings match your ROM.
+5. Test on one device first; keep a `fastboot` path to restore the stock images.
 
-See [`docs/BUILDING.md`](BUILDING.md) for how images are produced, and
-[`../README.md`](../README.md) for the flashing disclaimer.
+See [`docs/BUILDING.md`](BUILDING.md) for producing images and
+[`docs/RELEASING.md`](RELEASING.md) for the full flashing checklist.
